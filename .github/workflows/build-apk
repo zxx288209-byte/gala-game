@@ -1,0 +1,34 @@
+name: Build gala game APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          unzip -q gala_game_phone_cloud_build-1.zip -d extracted
+          PROJECT=$(find extracted -maxdepth 2 -type f -name settings.gradle | head -1 | xargs dirname)
+          echo "PROJECT=$PROJECT" >> "$GITHUB_ENV"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT"
+          gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: gala-game-apk
+          path: "${{ env.PROJECT }}/app/build/outputs/apk/debug/app-debug.apk"
